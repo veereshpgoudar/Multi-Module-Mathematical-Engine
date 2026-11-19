@@ -1,0 +1,28 @@
+# M3_ENGINE — Python dependencies
+# Install with:  pip install -r requirements.txt
+# Tesseract OCR binary must also be installed separately.
+
+# ── Web framework ──────────────────────────────────────────────────────────────
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# ── Image processing & OCR ────────────────────────────────────────────────────
+Pillow>=10.0.0
+pytesseract>=0.3.13
+opencv-python-headless>=4.10.0
+
+# ── Mathematical solving / symbolic algebra ───────────────────────────────────
+# Required by solver.py for robust equation parsing and Find-X solving.
+sympy>=1.13.0
+
+# ── Numerics ──────────────────────────────────────────────────────────────────
+# Useful for numerical/statistical modules and aligned with the project design.
+numpy>=1.26.0
+
+# ── Optional scientific computing ──────────────────────────────────────────────
+# Uncomment if your algorithm modules directly import scipy.
+# scipy>=1.13.0
+
+# ── Dev / testing ─────────────────────────────────────────────────────────────
+# pytest>=8.0.0
+# httpx>=0.27.0

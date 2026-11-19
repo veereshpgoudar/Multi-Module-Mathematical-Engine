@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050814">
+
+<title>Math Mind — Multi-Module Mathematical Engine</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(0, 188, 212, 0.10),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(90, 80, 255, 0.10),
+            transparent 30%
+        ),
+        #03050b;
+    color: #fff;
+}
+
+.background {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+    perspective: 1000px;
+    pointer-events: none;
+}
+
+#bg3d {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.bg-symbol {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    color: rgba(255,255,255,0.13);
+    user-select: none;
+    transform-style: preserve-3d;
+    animation:
+        symbolFloat
+        var(--float-duration, 9s)
+        cubic-bezier(0.45, 0, 0.55, 1)
+        infinite;
+    will-change: opacity;
+}
+
+@keyframes symbolFloat {
+    0%,100% {
+        opacity: 0.25;
+    }
+
+    50% {
+        opacity: 0.75;
+    }
+}
+
+.galaxy-particle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    color: rgba(0,188,212,0.55);
+    text-shadow: 0 0 10px rgba(0,188,212,0.6);
+    user-select: none;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+.app {
+    position: relative;
+    z-index: 2;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 16px 10px;
+}
+
+.title-glass {
+    position: relative;
+    padding: 12px 34px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 24px;
+    background: rgba(255,255,255,0.055);
+    backdrop-filter: blur(25px) saturate(160%);
+    -webkit-backdrop-filter: blur(25px) saturate(160%);
+    box-shadow:
+        0 15px 45px rgba(0,0,0,0.30),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+    text-align: center;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.55rem;
+    letter-spacing: 5px;
+    font-weight: 800;
+    color: transparent;
+    background:
+        linear-gradient(
+            90deg,
+            #00bcd4,
+            #fff,
+            #72f7ff,
+            #fff,
+            #00bcd4
+        );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: titleShimmer 4s linear infinite;
+}
+
+@keyframes titleShimmer {
+    from {
+        background-position: 0% 50%;
+    }
+
+    to {
+        background-position: 300% 50%;
+    }
+}
+
+.subtitle {
+    margin: 5px 0 0;
+    font-size: 0.62rem;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.48);
+    text-transform: uppercase;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.045);
+    color: rgba(255,255,255,0.45);
+    font-size: 10px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #777;
+    box-shadow: 0 0 7px currentColor;
+}
+
+.status-dot.online {
+    background: #65ff9a;
+}
+
+.status-dot.error {
+    background: #ff6767;
+}
+
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 18px 14px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,188,212,0.3) transparent;
+}
+
+.chat-area::-webkit-scrollbar {
+    width: 5px;
+}
+
+.chat-area::-webkit-scrollbar-thumb {
+    background: rgba(0,188,212,0.30);
+    border-radius: 10px;
+}
+
+.welcome {
+    max-width: 620px;
+    margin: 8vh auto 30px;
+    text-align: center;
+    animation: welcomeIn 0.7s ease;
+}
+
+@keyframes welcomeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.welcome-icon {
+    font-size: 42px;
+    filter: drop-shadow(0 0 18px rgba(0,188,212,0.55));
+}
+
+.welcome h2 {
+    margin: 12px 0 8px;
+    font-size: 25px;
+}
+
+.welcome p {
+    margin: 0 auto;
+    max-width: 500px;
+    color: rgba(255,255,255,0.48);
+    line-height: 1.6;
+}
+
+.example-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 18px;
+}
+
+.example {
+    padding: 7px 11px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.045);
+    color: rgba(255,255,255,0.50);
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.example:hover {
+    color: #00d9ef;
+    border-color: rgba(0,188,212,0.45);
+    background: rgba(0,188,212,0.10);
+    transform: translateY(-2px);
+}
+
+.message-wrap {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 13px;
+    animation: messageIn 0.3s ease;
+}
+
+@keyframes messageIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-wrap.user {
+    align-items: flex-end;
+}
+
+.message-wrap.bot {
+    align-items: flex-start;
+}
+
+.message {
+    max-width: min(720px, 82%);
+    padding: 11px 14px;
+    border-radius: 15px;
+    line-height: 1.55;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+.user .message {
+    background: rgba(0,188,212,0.14);
+    border: 1px solid rgba(0,188,212,0.35);
+}
+
+.bot .message {
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.solution-card {
+    width: min(760px, 88%);
+    overflow: hidden;
+    border-radius: 17px;
+    border: 1px solid rgba(0,188,212,0.23);
+    background: rgba(3,12,20,0.58);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+    margin-bottom: 10px;
+}
+
+.solution-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 15px;
+    background: rgba(0,188,212,0.08);
+    border-bottom: 1px solid rgba(0,188,212,0.14);
+}
+
+.solution-subject {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #00d8ef;
+}
+
+.solution-type {
+    margin-left: auto;
+    color: rgba(255,255,255,0.38);
+    font-size: 10px;
+}
+
+.question-number {
+    padding: 4px 8px;
+    border-radius: 10px;
+    background: rgba(0,188,212,0.12);
+    border: 1px solid rgba(0,188,212,0.22);
+    color: #8df7ff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.matched-question {
+    padding: 9px 15px;
+    color: rgba(255,255,255,0.52);
+    font-size: 12px;
+    font-style: italic;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    white-space: pre-wrap;
+}
+
+.solution-note {
+    margin: 9px 15px;
+    padding: 8px 10px;
+    border-left: 2px solid rgba(255,200,80,0.5);
+    background: rgba(255,190,70,0.055);
+    color: rgba(255,210,120,0.78);
+    font-size: 11px;
+}
+
+.steps {
+    padding: 13px 15px;
+}
+
+.step {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 13px;
+    align-items: flex-start;
+}
+
+.step:last-child {
+    margin-bottom: 0;
+}
+
+.step-number {
+    min-width: 24px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(0,188,212,0.40);
+    background: rgba(0,188,212,0.15);
+    color: #00d8ef;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.step-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.step-description {
+    color: rgba(255,255,255,0.86);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.formula,
+.calculation,
+.result-line {
+    margin-top: 5px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: #bafaff;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.calculation {
+    color: rgba(255,255,255,0.70);
+}
+
+.result-line {
+    color: #7dffb2;
+}
+
+.interpretation {
+    margin-top: 5px;
+    color: rgba(255,255,255,0.48);
+    font-size: 11px;
+    font-style: italic;
+}
+
+.result {
+    margin: 0 15px 13px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(0,188,212,0.15),
+            rgba(0,255,150,0.06)
+        );
+    border: 1px solid rgba(0,188,212,0.30);
+    color: #8dffbd;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.validation {
+    margin: 0 15px 13px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    background: rgba(80,255,150,0.06);
+    border: 1px solid rgba(80,255,150,0.18);
+    color: #8dffbd;
+    font-size: 11px;
+}
+
+.copy-button {
+    display: block;
+    margin: 3px 0 14px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 9px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.48);
+    font-size: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.copy-button:hover {
+    color: #00d8ef;
+    border-color: rgba(0,188,212,0.35);
+    background: rgba(0,188,212,0.08);
+}
+
+.error-message {
+    max-width: min(760px, 88%);
+    padding: 11px 14px;
+    border-radius: 12px;
+    background: rgba(255,70,70,0.07);
+    border: 1px solid rgba(255,70,70,0.25);
+    color: #ff9a9a;
+    font-size: 13px;
+}
+
+.thinking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: rgba(255,255,255,0.42);
+    font-size: 11px;
+}
+
+.thinking-dots {
+    display: flex;
+    gap: 3px;
+}
+
+.thinking-dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #00bcd4;
+    animation: thinkingDot 1s infinite;
+}
+
+.thinking-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.thinking-dots span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes thinkingDot {
+    0%,100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+}
+
+.composer-area {
+    flex-shrink: 0;
+    padding: 10px 16px 15px;
+}
+
+.composer {
+    width: min(850px, 100%);
+    margin: auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.055);
+    backdrop-filter: blur(25px) saturate(150%);
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+    box-shadow:
+        0 15px 40px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+#questionInput {
+    flex: 1;
+    min-height: 46px;
+    max-height: 160px;
+    resize: none;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 11px 12px;
+}
+
+#questionInput::placeholder {
+    color: rgba(255,255,255,0.35);
+}
+
+.send-button {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 15px;
+    background:
+        linear-gradient(
+            135deg,
+            #00bcd4,
+            #007d91
+        );
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(0,188,212,0.25);
+    transition: 0.2s ease;
+}
+
+.send-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0,188,212,0.45);
+}
+
+.send-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.file-button {
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 13px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.50);
+    cursor: pointer;
+}
+
+.file-button:hover {
+    color: #00d8ef;
+    border-color: rgba(0,188,212,0.35);
+}
+
+#fileInput {
+    display: none;
+}
+
+.file-preview {
+    display: none;
+    width: min(850px, 100%);
+    margin: 0 auto 7px;
+    padding: 8px 11px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+}
+
+.file-preview.active {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.clear-file {
+    cursor: pointer;
+    color: #ff8888;
+}
+
+@media (max-width: 700px) {
+    .header {
+        padding-top: 10px;
+    }
+
+    .title-glass {
+        padding: 10px 18px;
+        border-radius: 18px;
+    }
+
+    .title {
+        font-size: 1.15rem;
+        letter-spacing: 3px;
+    }
+
+    .subtitle {
+        font-size: 0.52rem;
+        letter-spacing: 2px;
+    }
+
+    .chat-area {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    .solution-card {
+        width: 100%;
+    }
+
+    .message {
+        max-width: 92%;
+    }
+
+    .composer-area {
+        padding: 7px 8px 10px;
+    }
+
+    .welcome {
+        margin-top: 4vh;
+    }
+
+    .example-row {
+        padding: 0 5px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="background">
+    <div id="bg3d"></div>
+</div>
+
+<div class="app">
+
+<header class="header">
+    <div class="title-glass">
+        <h1 class="title">MATH MIND</h1>
+
+        <div class="subtitle">
+            Multi-Module Mathematical Engine
+        </div>
+
+        <div class="status-bar">
+            <div class="status-pill">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Checking engine...</span>
+            </div>
+
+            <div class="status-pill">
+                <span id="datasetCount">Datasets: —</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<main id="chatArea" class="chat-area">
+
+    <section id="welcome" class="welcome">
+
+        <div class="welcome-icon">∑</div>
+
+        <h2>How can I help you?</h2>
+
+        <p>
+            Ask mathematical questions and Math Mind will
+            classify the problem, use the appropriate dataset
+            as reference, solve it step-by-step and validate
+            the result where possible.
+        </p>
+
+        <div class="example-row">
+
+            <button
+                class="example"
+                data-question="Find the value of x: 9(x - 6) = 21">
+                Find x
+            </button>
+
+            <button
+                class="example"
+                data-question="Find the covariance of X = [8, 14, 12, 6, 4, 9, 6] and Y = [16, 11, 10, 8, 20, 7, 1]">
+                Covariance
+            </button>
+
+            <button
+                class="example"
+                data-question="Find the square root of 144">
+                Square root
+            </button>
+
+            <button
+                class="example"
+                data-question="2 + 5 * 8">
+                Arithmetic
+            </button>
+
+        </div>
+    </section>
+
+</main>
+
+
+<footer class="composer-area">
+
+    <div id="filePreview" class="file-preview">
+        <span id="fileName"></span>
+        <span
+            id="clearFile"
+            class="clear-file">
+            ✕
+        </span>
+    </div>
+
+    <div class="composer">
+
+        <button
+            id="fileButton"
+            class="file-button"
+            type="button"
+            title="Upload image">
+            📎
+        </button>
+
+        <input
+            id="fileInput"
+            type="file"
+            accept="image/*">
+
+        <textarea
+            id="questionInput"
+            rows="1"
+            maxlength="5000"
+            placeholder="Ask a mathematical question..."
+            autocomplete="off"></textarea>
+
+        <button
+            id="sendButton"
+            class="send-button"
+            type="button"
+            title="Solve">
+            ➤
+        </button>
+
+    </div>
+
+</footer>
+
+</div>
+
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   STATE
+   ========================================================================== */
+
+const state = {
+    solving: false,
+    selectedFile: null,
+    selectedSubject: "",
+    lastResult: null
+};
+
+
+/* ==========================================================================
+   DOM
+   ========================================================================== */
+
+const chatArea =
+    document.getElementById("chatArea");
+
+const welcome =
+    document.getElementById("welcome");
+
+const questionInput =
+    document.getElementById("questionInput");
+
+const sendButton =
+    document.getElementById("sendButton");
+
+const fileButton =
+    document.getElementById("fileButton");
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const filePreview =
+    document.getElementById("filePreview");
+
+const fileName =
+    document.getElementById("fileName");
+
+const clearFileButton =
+    document.getElementById("clearFile");
+
+const statusDot =
+    document.getElementById("statusDot");
+
+const statusText =
+    document.getElementById("statusText");
+
+const datasetCount =
+    document.getElementById("datasetCount");
+
+
+/* ==========================================================================
+   BACKGROUND
+   ========================================================================== */
+
+function createBackground() {
+
+    const bg =
+        document.getElementById("bg3d");
+
+    if (!bg) {
+        return;
+    }
+
+    const symbols = [
+        "∑",
+        "√",
+        "π",
+        "∞",
+        "∫",
+        "x²",
+        "f(x)",
+        "Δ",
+        "Σ",
+        "∂",
+        "θ",
+        "λ",
+        "μ",
+        "σ",
+        "α",
+        "β",
+        "γ",
+        "≈",
+        "≠",
+        "≤",
+        "≥"
+    ];
+
+    const width =
+        window.innerWidth;
+
+    const height =
+        window.innerHeight;
+
+    const count =
+        Math.min(
+            35,
+            Math.max(
+                18,
+                Math.floor(
+                    (width * height) / 35000
+                )
+            )
+        );
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const symbol =
+            document.createElement("div");
+
+        symbol.className =
+            "bg-symbol";
+
+        symbol.textContent =
+            symbols[
+                Math.floor(
+                    Math.random() *
+                    symbols.length
+                )
+            ];
+
+        const x =
+            Math.random() *
+            width;
+
+        const y =
+            Math.random() *
+            height;
+
+        const z =
+            (Math.random() - 0.5) *
+            500;
+
+        const scale =
+            0.5 +
+            Math.random() *
+            1.5;
+
+        symbol.style.transform =
+            `translate3d(${x - width / 2}px, ${y - height / 2}px, ${z}px) scale(${scale})`;
+
+        symbol.style.fontSize =
+            `${12 + Math.random() * 30}px`;
+
+        symbol.style.setProperty(
+            "--float-duration",
+            `${6 + Math.random() * 8}s`
+        );
+
+        symbol.style.animationDelay =
+            `${Math.random() * -8}s`;
+
+        bg.appendChild(symbol);
+    }
+}
+
+createBackground();
+
+
+/* ==========================================================================
+   INPUT AUTO RESIZE
+   ========================================================================== */
+
+questionInput.addEventListener(
+    "input",
+    () => {
+
+        questionInput.style.height =
+            "auto";
+
+        questionInput.style.height =
+            Math.min(
+                questionInput.scrollHeight,
+                160
+            ) + "px";
+    }
+);
+
+
+/* ==========================================================================
+   FILE HANDLING
+   ========================================================================== */
+
+fileButton.addEventListener(
+    "click",
+    () => {
+        fileInput.click();
+    }
+);
+
+
+fileInput.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files &&
+            event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        state.selectedFile =
+            file;
+
+        fileName.textContent =
+            file.name;
+
+        filePreview.classList.add(
+            "active"
+        );
+    }
+);
+
+
+clearFileButton.addEventListener(
+    "click",
+    clearImage
+);
+
+
+function clearImage() {
+
+    state.selectedFile =
+        null;
+
+    fileInput.value =
+        "";
+
+    fileName.textContent =
+        "";
+
+    filePreview.classList.remove(
+        "active"
+    );
+}
+
+
+/* ==========================================================================
+   HEALTH CHECK
+   ========================================================================== */
+
+async function checkHealth() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/health",
+                {
+                    method: "GET"
+                }
+            );
+
+        if (!response.ok) {
+            throw new Error("Health check failed");
+        }
+
+        const data =
+            await response.json();
+
+        statusDot.className =
+            "status-dot online";
+
+        statusText.textContent =
+            "Engine online";
+
+        if (
+            data.datasets != null
+        ) {
+
+            datasetCount.textContent =
+                `Datasets: ${data.datasets}`;
+        }
+
+    } catch {
+
+        statusDot.className =
+            "status-dot error";
+
+        statusText.textContent =
+            "Engine offline";
+    }
+}
+
+
+/* ==========================================================================
+   USER MESSAGE
+   ========================================================================== */
+
+function appendUser(
+    text,
+    file
+) {
+
+    hideWelcome();
+
+    const wrap =
+        document.createElement("div");
+
+    wrap.className =
+        "message-wrap user";
+
+    const message =
+        document.createElement("div");
+
+    message.className =
+        "message";
+
+    if (text) {
+
+        const textNode =
+            document.createElement("div");
+
+        textNode.textContent =
+            text;
+
+        message.appendChild(
+            textNode
+        );
+    }
+
+    if (file) {
+
+        const fileInfo =
+            document.createElement("div");
+
+        fileInfo.style.marginTop =
+            text ? "7px" : "0";
+
+        fileInfo.style.opacity =
+            "0.55";
+
+        fileInfo.style.fontSize =
+            "11px";
+
+        fileInfo.textContent =
+            `📎 ${file.name}`;
+
+        message.appendChild(
+            fileInfo
+        );
+    }
+
+    wrap.appendChild(
+        message
+    );
+
+    chatArea.appendChild(
+        wrap
+    );
+
+    scrollToBottom();
+}
+
+
+/* ==========================================================================
+   THINKING
+   ========================================================================== */
+
+function appendThinking() {
+
+    hideWelcome();
+
+    const wrap =
+        document.createElement("div");
+
+    wrap.className =
+        "message-wrap bot thinking";
+
+    wrap.innerHTML = `
+        <span>Solving</span>
+        <span class="thinking-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    `;
+
+    chatArea.appendChild(
+        wrap
+    );
+
+    scrollToBottom();
+
+    return wrap;
+}
+
+
+/* ==========================================================================
+   ERROR
+   ========================================================================== */
+
+function appendError(
+    message
+) {
+
+    hideWelcome();
+
+    const wrap =
+        document.createElement("div");
+
+    wrap.className =
+        "message-wrap bot";
+
+    const error =
+        document.createElement("div");
+
+    error.className =
+        "error-message";
+
+    error.textContent =
+        message ||
+        "An unknown error occurred.";
+
+    wrap.appendChild(
+        error
+    );
+
+    chatArea.appendChild(
+        wrap
+    );
+
+    scrollToBottom();
+}
+
+
+/* ==========================================================================
+   SOLUTION RENDERING
+   ========================================================================== */
+
+/*
+ * IMPORTANT:
+ *
+ * The API can return either:
+ *
+ * 1. A normal single result:
+ *      {
+ *          type: "...",
+ *          solution_steps: [...]
+ *      }
+ *
+ * 2. Multiple results:
+ *      {
+ *          type: "multi_solution",
+ *          question_count: 2,
+ *          results: [
+ *              {...},
+ *              {...}
+ *          ]
+ *      }
+ *
+ * The previous frontend only rendered case #1.
+ *
+ * This version explicitly handles case #2 and creates
+ * one complete solution card for EVERY question.
+ */
+
+function renderSolution(data) {
+
+    if (
+        data &&
+        data.type === "multi_solution" &&
+        Array.isArray(data.results)
+    ) {
+
+        data.results.forEach(
+            (result, index) => {
+
+                renderSingleSolution(
+                    result,
+                    index + 1,
+                    data.question_count ||
+                    data.results.length
+                );
+            }
+        );
+
+        scrollToBottom();
+
+        return;
+    }
+
+    renderSingleSolution(
+        data
+    );
+}
+
+
+/* ==========================================================================
+   SINGLE SOLUTION CARD
+   ========================================================================== */
+
+function renderSingleSolution(
+    data,
+    questionNumber = null,
+    totalQuestions = null
+) {
+
+    if (!data) {
+
+        appendError(
+            "The engine returned an empty result."
+        );
+
+        return;
+    }
+
+    hideWelcome();
+
+    state.lastResult =
+        data;
+
+    const wrap =
+        document.createElement("div");
+
+    wrap.className =
+        "message-wrap bot";
+
+
+    const card =
+        document.createElement("div");
+
+    card.className =
+        "solution-card";
+
+
+    /* ----------------------------------------------------------------------
+       HEADER
+       ---------------------------------------------------------------------- */
+
+    const header =
+        document.createElement("div");
+
+    header.className =
+        "solution-header";
+
+
+    const subject =
+        document.createElement("span");
+
+    subject.className =
+        "solution-subject";
+
+    subject.textContent =
+        String(
+            data.subject ||
+            data.module ||
+            "Mathematics"
+        );
+
+
+    header.appendChild(
+        subject
+    );
+
+
+    if (
+        questionNumber != null &&
+        totalQuestions != null
+    ) {
+
+        const questionBadge =
+            document.createElement("span");
+
+        questionBadge.className =
+            "question-number";
+
+        questionBadge.textContent =
+            `Question ${questionNumber} of ${totalQuestions}`;
+
+        header.appendChild(
+            questionBadge
+        );
+    }
+
+
+    const type =
+        document.createElement("span");
+
+    type.className =
+        "solution-type";
+
+    type.textContent =
+        String(
+            data.type ||
+            "solution"
+        );
+
+
+    header.appendChild(
+        type
+    );
+
+
+    card.appendChild(
+        header
+    );
+
+
+    /* ----------------------------------------------------------------------
+       QUESTION
+       ---------------------------------------------------------------------- */
+
+    const matchedQuestion =
+        document.createElement("div");
+
+    matchedQuestion.className =
+        "matched-question";
+
+
+    const questionText =
+        data.matched_question ||
+        data.question ||
+        data.input_question ||
+        data.input_text ||
+        "";
+
+
+    if (questionText) {
+
+        matchedQuestion.textContent =
+            questionText;
+
+        card.appendChild(
+            matchedQuestion
+        );
+    }
+
+
+    /* ----------------------------------------------------------------------
+       DATASET INFORMATION
+       ---------------------------------------------------------------------- */
+
+    if (
+        data.dataset_assisted ||
+        data.dataset_entries != null ||
+        data.dataset_learning
+    ) {
+
+        const note =
+            document.createElement("div");
+
+        note.className =
+            "solution-note";
+
+
+        let noteText =
+            data.exact_dataset_match
+                ? "Please check solution once again."
+                : "Please check solution once again " +
+                  "Because i was also made a mistake";
+
+
+        if (
+            data.dataset_entries != null
+        ) {
+
+            noteText +=
+                ` Entries: ${data.dataset_entries}.`;
+        }
+
+
+        if (
+            data.similarity_answer_copy === false &&
+            !data.exact_dataset_match
+        ) {
+
+            noteText +=
+                " ...............";
+        }
+
+
+        note.textContent =
+            noteText;
+
+
+        card.appendChild(
+            note
+        );
+    }
+
+
+    /* ----------------------------------------------------------------------
+       EXTRA NOTE
+       ---------------------------------------------------------------------- */
+
+    if (
+        data.note &&
+        !data.dataset_assisted
+    ) {
+
+        const note =
+            document.createElement("div");
+
+        note.className =
+            "solution-note";
+
+        note.textContent =
+            String(data.note);
+
+        card.appendChild(
+            note
+        );
+    }
+
+
+    /* ----------------------------------------------------------------------
+       RESPONSE MESSAGE
+       ---------------------------------------------------------------------- */
+
+    if (data.message) {
+
+        const message =
+            document.createElement("div");
+
+        message.className =
+            "solution-note";
+
+        message.textContent =
+            String(data.message);
+
+        card.appendChild(
+            message
+        );
+    }
+
+
+    /* ----------------------------------------------------------------------
+       STEPS
+       ---------------------------------------------------------------------- */
+
+    const steps =
+        document.createElement("div");
+
+    steps.className =
+        "steps";
+
+
+    const solutionSteps =
+        Array.isArray(
+            data.solution_steps
+        )
+            ? data.solution_steps
+            : [];
+
+
+    if (
+        solutionSteps.length === 0
+    ) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.style.color =
+            "rgba(255,255,255,0.45)";
+
+        empty.style.fontSize =
+            "12px";
+
+        empty.textContent =
+            "No step-by-step details were returned.";
+
+        steps.appendChild(
+            empty
+        );
+
+    } else {
+
+        solutionSteps.forEach(
+            (step, index) => {
+
+                const row =
+                    document.createElement("div");
+
+                row.className =
+                    "step";
+
+
+                const number =
+                    document.createElement("div");
+
+                number.className =
+                    "step-number";
+
+                number.textContent =
+                    String(
+                        step.step ??
+                        index + 1
+                    );
+
+
+                const body =
+                    document.createElement("div");
+
+                body.className =
+                    "step-body";
+
+
+                const description =
+                    document.createElement("div");
+
+                description.className =
+                    "step-description";
+
+                description.textContent =
+                    String(
+                        step.description ??
+                        step.text ??
+                        ""
+                    );
+
+
+                if (
+                    description.textContent
+                ) {
+
+                    body.appendChild(
+                        description
+                    );
+                }
+
+
+                appendStepValue(
+                    body,
+                    step.formula,
+                    "formula"
+                );
+
+
+                appendStepValue(
+                    body,
+                    step.calculation,
+                    "calculation"
+                );
+
+
+                appendStepValue(
+                    body,
+                    step.result,
+                    "result-line"
+                );
+
+
+                if (
+                    step.interpretation
+                ) {
+
+                    const interpretation =
+                        document.createElement("div");
+
+                    interpretation.className =
+                        "interpretation";
+
+                    interpretation.textContent =
+                        "↳ " +
+                        step.interpretation;
+
+                    body.appendChild(
+                        interpretation
+                    );
+                }
+
+
+                row.appendChild(
+                    number
+                );
+
+                row.appendChild(
+                    body
+                );
+
+                steps.appendChild(
+                    row
+                );
+            }
+        );
+    }
+
+
+    card.appendChild(
+        steps
+    );
+
+
+    /* ----------------------------------------------------------------------
+       FINAL ANSWER
+       ---------------------------------------------------------------------- */
+
+    if (
+        data.answer != null &&
+        data.answer !== ""
+    ) {
+
+        const answer =
+            document.createElement("div");
+
+        answer.className =
+            "result";
+
+        answer.textContent =
+            `Answer: ${data.answer}`;
+
+        card.appendChild(
+            answer
+        );
+    }
+
+
+    /* ----------------------------------------------------------------------
+       VALIDATION
+       ---------------------------------------------------------------------- */
+
+    if (
+        data.validation &&
+        !solutionSteps.some(
+            step =>
+                String(
+                    step.description ||
+                    ""
+                )
+                .toLowerCase()
+                .includes("validation")
+        )
+    ) {
+
+        const validation =
+            document.createElement("div");
+
+        validation.className =
+            "validation";
+
+        validation.textContent =
+            `✓ Validation: ${data.validation}`;
+
+        card.appendChild(
+            validation
+        );
+    }
+
+
+    /* ----------------------------------------------------------------------
+       PROCESSING TIME
+       ---------------------------------------------------------------------- */
+
+    if (
+        data.processing_time_ms != null
+    ) {
+
+        const processing =
+            document.createElement("div");
+
+        processing.style.padding =
+            "0 15px 12px";
+
+        processing.style.color =
+            "rgba(255,255,255,0.30)";
+
+        processing.style.fontSize =
+            "10px";
+
+        processing.textContent =
+            `Processing time: ${
+                formatNumber(
+                    data.processing_time_ms
+                )
+            } ms`;
+
+        card.appendChild(
+            processing
+        );
+    }
+
+
+    wrap.appendChild(
+        card
+    );
+
+
+    /* ----------------------------------------------------------------------
+       COPY BUTTON
+       ---------------------------------------------------------------------- */
+
+    const copyButton =
+        createCopyButton(
+            () =>
+                buildSolutionText(
+                    data
+                )
+        );
+
+    wrap.appendChild(
+        copyButton
+    );
+
+
+    chatArea.appendChild(
+        wrap
+    );
+
+    scrollToBottom();
+}
+
+
+/* ==========================================================================
+   STEP VALUE
+   ========================================================================== */
+
+function appendStepValue(
+    parent,
+    value,
+    className
+) {
+
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+
+        return;
+    }
+
+
+    const element =
+        document.createElement("div");
+
+    element.className =
+        className;
+
+    element.textContent =
+        String(value);
+
+    parent.appendChild(
+        element
+    );
+}
+
+
+/* ==========================================================================
+   COPY BUTTON
+   ========================================================================== */
+
+function createCopyButton(
+    getText
+) {
+
+    const button =
+        document.createElement("button");
+
+    button.className =
+        "copy-button";
+
+    button.type =
+        "button";
+
+    button.textContent =
+        "Copy solution";
+
+
+    button.addEventListener(
+        "click",
+        async () => {
+
+            const text =
+                getText();
+
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    text
+                );
+
+                button.textContent =
+                    "✓ Copied";
+
+                setTimeout(
+                    () => {
+                        button.textContent =
+                            "Copy solution";
+                    },
+                    1400
+                );
+
+            } catch {
+
+                button.textContent =
+                    "Copy failed";
+
+                setTimeout(
+                    () => {
+                        button.textContent =
+                            "Copy solution";
+                    },
+                    1400
+                );
+            }
+        }
+    );
+
+
+    return button;
+}
+
+
+/* ==========================================================================
+   BUILD SOLUTION TEXT
+   ========================================================================== */
+
+function buildSolutionText(
+    data
+) {
+
+    const lines = [];
+
+
+    if (
+        data.subject
+    ) {
+
+        lines.push(
+            "Subject: " +
+            data.subject
+        );
+
+        lines.push("");
+    }
+
+
+    if (
+        data.matched_question
+    ) {
+
+        lines.push(
+            "Question: " +
+            data.matched_question
+        );
+
+        lines.push("");
+    }
+
+
+    const steps =
+        Array.isArray(
+            data.solution_steps
+        )
+            ? data.solution_steps
+            : [];
+
+
+    steps.forEach(
+        (step, index) => {
+
+            lines.push(
+                `Step ${
+                    step.step ??
+                    index + 1
+                }: ${
+                    step.description ??
+                    step.text ??
+                    ""
+                }`
+            );
+
+
+            if (
+                step.formula
+            ) {
+
+                lines.push(
+                    "Formula: " +
+                    step.formula
+                );
+            }
+
+
+            if (
+                step.calculation
+            ) {
+
+                lines.push(
+                    "Calculation: " +
+                    step.calculation
+                );
+            }
+
+
+            if (
+                step.result
+            ) {
+
+                lines.push(
+                    "Result: " +
+                    step.result
+                );
+            }
+
+
+            if (
+                step.interpretation
+            ) {
+
+                lines.push(
+                    "Interpretation: " +
+                    step.interpretation
+                );
+            }
+
+
+            lines.push("");
+        }
+    );
+
+
+    if (
+        data.answer != null &&
+        data.answer !== ""
+    ) {
+
+        lines.push(
+            "Answer: " +
+            data.answer
+        );
+    }
+
+
+    if (
+        data.validation
+    ) {
+
+        lines.push(
+            "Validation: " +
+            data.validation
+        );
+    }
+
+
+    if (
+        data.processing_time_ms != null
+    ) {
+
+        lines.push(
+            `Processing time: ${
+                formatNumber(
+                    data.processing_time_ms
+                )
+            } ms`
+        );
+    }
+
+
+    return lines.join(
+        "\n"
+    );
+}
+
+
+/* ==========================================================================
+   MAIN SOLVER
+   ========================================================================== */
+
+async function solveProblem() {
+
+    if (
+        state.solving
+    ) {
+
+        return;
+    }
+
+
+    const text =
+        questionInput.value.trim();
+
+
+    const file =
+        state.selectedFile;
+
+
+    if (
+        !text &&
+        !file
+    ) {
+
+        questionInput.focus();
+
+        return;
+    }
+
+
+    state.solving =
+        true;
+
+
+    sendButton.disabled =
+        true;
+
+
+    appendUser(
+        text,
+        file
+    );
+
+
+    questionInput.value =
+        "";
+
+    questionInput.style.height =
+        "46px";
+
+
+    const selectedFile =
+        file;
+
+
+    clearImage();
+
+
+    const thinking =
+        appendThinking();
+
+
+    const form =
+        new FormData();
+
+
+    if (
+        text
+    ) {
+
+        form.append(
+            "question",
+            text
+        );
+    }
+
+
+    if (
+        selectedFile
+    ) {
+
+        form.append(
+            "image",
+            selectedFile
+        );
+    }
+
+
+    if (
+        state.selectedSubject
+    ) {
+
+        form.append(
+            "subject",
+            state.selectedSubject
+        );
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/solve",
+                {
+                    method: "POST",
+                    body: form
+                }
+            );
+
+
+        thinking.remove();
+
+
+        let data =
+            null;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch {
+
+            data = {
+                type: "error",
+                message:
+                    "Server returned an invalid response."
+            };
+        }
+
+
+        if (
+            !response.ok
+        ) {
+
+            appendError(
+                data.message ||
+                `Server error (${response.status})`
+            );
+
+            return;
+        }
+
+
+        renderSolution(
+            data
+        );
+
+
+    } catch (
+        error
+    ) {
+
+        thinking.remove();
+
+
+        appendError(
+            "Could not connect to M3_ENGINE. " +
+            "Make sure api/app.py is running."
+        );
+
+    } finally {
+
+        state.solving =
+            false;
+
+
+        sendButton.disabled =
+            false;
+
+
+        questionInput.focus();
+    }
+}
+
+
+/* ==========================================================================
+   EXAMPLES
+   ========================================================================== */
+
+document
+    .querySelectorAll(
+        ".example"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    questionInput.value =
+                        button.dataset.question ||
+                        "";
+
+                    questionInput.dispatchEvent(
+                        new Event("input")
+                    );
+
+                    questionInput.focus();
+                }
+            );
+        }
+    );
+
+
+/* ==========================================================================
+   KEYBOARD SHORTCUTS
+   ========================================================================== */
+
+sendButton.addEventListener(
+    "click",
+    solveProblem
+);
+
+
+questionInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            solveProblem();
+
+            return;
+        }
+
+
+        if (
+            event.key === "Enter" &&
+            event.ctrlKey
+        ) {
+
+            event.preventDefault();
+
+            solveProblem();
+        }
+    }
+);
+
+
+/* ==========================================================================
+   HELPERS
+   ========================================================================== */
+
+function hideWelcome() {
+
+    if (
+        !welcome
+    ) {
+
+        return;
+    }
+
+
+    welcome.style.display =
+        "none";
+}
+
+
+function scrollToBottom() {
+
+    requestAnimationFrame(
+        () => {
+
+            chatArea.scrollTop =
+                chatArea.scrollHeight;
+        }
+    );
+}
+
+
+function truncate(
+    text,
+    length
+) {
+
+    if (
+        text.length <= length
+    ) {
+
+        return text;
+    }
+
+
+    return (
+        text.slice(
+            0,
+            length
+        ) +
+        "…"
+    );
+}
+
+
+function formatNumber(
+    value
+) {
+
+    const number =
+        Number(value);
+
+
+    if (
+        !Number.isFinite(
+            number
+        )
+    ) {
+
+        return String(value);
+    }
+
+
+    return number
+        .toFixed(2)
+        .replace(
+            /\.00$/,
+            ""
+        );
+}
+
+
+/* ==========================================================================
+   INITIALISE
+   ========================================================================== */
+
+window.addEventListener(
+    "load",
+    () => {
+
+        checkHealth();
+
+
+        setInterval(
+            checkHealth,
+            15000
+        );
+    }
+);
+
+
+/* ==========================================================================
+   GLOBAL SHORTCUTS
+   ========================================================================== */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.ctrlKey &&
+            event.key === "/"
+        ) {
+
+            event.preventDefault();
+
+            questionInput.focus();
+        }
+
+
+        if (
+            event.key === "Escape" &&
+            state.selectedFile
+        ) {
+
+            clearImage();
+        }
+    }
+);
+</script>
+
+</body>
+</html>
